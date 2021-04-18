@@ -118,3 +118,5 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     },
   }
 }
+
+export default VitePluginRemoteAssets

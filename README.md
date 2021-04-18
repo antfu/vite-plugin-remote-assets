@@ -2,6 +2,37 @@
 
 [![NPM version](https://img.shields.io/npm/v/vite-plugin-remote-assets?color=a1b858&label=)](https://www.npmjs.com/package/vite-plugin-remote-assets)
 
+
+Bundles your assets from remote urls with your app
+
+```html
+<img src="http://example.com/image.jpg" />
+```
+
+To
+
+```html
+<img src="/.remote-assets/f83j2f.jpg" />
+```
+
+
+## Install
+
+```bash
+npm i -D vite-plugin-remote-assets
+```
+
+```ts
+// vite.config.ts
+import RemoteAssets from 'vite-plugin-remote-assets'
+
+export default {
+  plugins: [
+    RemoteAssets()
+  ]
+}
+```
+
 ## Sponsors
 
 <p align="center">
