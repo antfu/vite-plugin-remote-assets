@@ -1,0 +1,61 @@
+{
+  "name": "vite-plugin-remote-assets",
+  "version": "0.0.0",
+  "description": "Bundles your assets from remote urls with your app",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "funding": "https://github.com/sponsors/antfu",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "sideEffects": false,
+  "bugs": {
+    "url": "https://github.com/antfu/vite-plugin-remote-assets/issues"
+  },
+  "homepage": "https://github.com/antfu/vite-plugin-remote-assets#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antfu/vite-plugin-remote-assets.git"
+  },
+  "keywords": [
+    "vite-plugin"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "dev": "npm run build -- --watch",
+    "start": "esno src/index.ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "release": "git-ensure -a && bumpp --commit --push --tag",
+    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "jest"
+  },
+  "peerDependencies": {
+    "vite": "^2.0.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^0.6.2",
+    "@antfu/ni": "^0.5.8",
+    "@types/blueimp-md5": "^2.7.0",
+    "@types/debug": "^4.1.5",
+    "@types/jest": "^26.0.22",
+    "@types/node": "^14.14.41",
+    "blueimp-md5": "^2.18.0",
+    "bumpp": "^6.0.6",
+    "eslint": "^7.24.0",
+    "eslint-plugin-jest": "^24.3.5",
+    "esno": "^0.5.0",
+    "git-ensure": "^0.1.0",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.5",
+    "tsup": "^4.8.21",
+    "typescript": "^4.2.4",
+    "vite": "^2.1.5"
+  },
+  "dependencies": {
+    "debug": "^4.3.2"
+  }
+}
