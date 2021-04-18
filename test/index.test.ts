@@ -1,7 +1,6 @@
-import { one } from '../src'
 
 describe('should', () => {
   it('exported', () => {
-    expect(one).toEqual(1)
+    expect(1).toEqual(1)
   })
 })
