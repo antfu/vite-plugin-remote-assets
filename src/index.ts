@@ -2,12 +2,20 @@ import { extname, resolve, join } from 'path'
 import { existsSync, mkdirSync, createWriteStream } from 'fs'
 import http from 'http'
 import https from 'https'
+import type { Plugin } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
-import { Plugin } from 'vite'
 
 export interface RemoteAssetsRule {
+  /**
+   * Regex to match urls, should be http:// or https://
+   */
   match: RegExp
+  /**
+   * Extension for the url, should by leading with `.`
+   *
+   * When not specified, if will try to infer from the url.
+   */
   ext?: string
 }
 
@@ -116,7 +124,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
 
       return code
     },
-  }
+  } as Plugin
 }
 
 export default VitePluginRemoteAssets
