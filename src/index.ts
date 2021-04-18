@@ -98,7 +98,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
               return full
 
             matched = true
-            const hash = md5(url) + rule.ext || extname(url)
+            const hash = md5(url) + (rule.ext || extname(url))
             const filepath = join(dir, hash)
 
             debug('detected', url, hash)
