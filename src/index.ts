@@ -66,10 +66,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     const request = client.get(url, res => res.pipe(file))
 
     return new Promise((resolve, reject) => {
-      request.on('finish', () => {
-        file.close()
-        resolve()
-      })
+      request.on('finish', resolve)
       request.on('error', (e) => {
         file.destroy()
         reject(e)
