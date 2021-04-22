@@ -1,7 +1,7 @@
 import { extname, resolve, join } from 'path'
-import { existsSync, mkdirSync, createWriteStream } from 'fs'
 import http from 'http'
 import https from 'https'
+import { existsSync, createWriteStream, ensureDir } from 'fs-extra'
 import type { Plugin } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
@@ -77,10 +77,9 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
   return {
     name: 'vite-plugin-remote-assets',
     enforce: 'pre',
-    configResolved(config) {
+    async configResolved(config) {
       dir = resolve(config.publicDir, assetsDir)
-      if (!existsSync(dir))
-        mkdirSync(dir)
+      await ensureDir(dir)
     },
     async transform(code) {
       let matched = false
