@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-remote-assets",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "Bundles your assets from remote urls with your app",
   "keywords": [
     "vite-plugin"
