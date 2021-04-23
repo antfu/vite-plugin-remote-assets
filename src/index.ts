@@ -5,6 +5,7 @@ import { existsSync, createWriteStream, ensureDir, emptyDir } from 'fs-extra'
 import type { Plugin } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
+import MagicString from 'magic-string'
 
 export interface RemoteAssetsRule {
   /**
@@ -75,43 +76,53 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
   }
 
   async function transform(code: string, id: string) {
-    let matched = false
     const tasks: Promise<void>[] = []
 
+    const s = new MagicString(code)
+
+    let hasReplaced = false
+    let match
+
     for (const rule of rules) {
-      code = code.replace(
-        rule.match,
-        (full, url) => {
-          url = url || full
-          if (!url || !isValidHttpUrl(url))
-            return full
+      rule.match.lastIndex = 0
+      // eslint-disable-next-line no-cond-assign
+      while ((match = rule.match.exec(code))) {
+        const start = match.index
+        const end = start + match[0].length
+        const url = match[0]
+        if (!url || !isValidHttpUrl(url))
+          continue
 
-          matched = true
-          const hash = md5(url) + (rule.ext || extname(url))
-          const filepath = posix.join(dir, hash)
+        hasReplaced = true
+        const hash = md5(url) + (rule.ext || extname(url))
+        const filepath = posix.join(dir, hash)
 
-          debug('detected', url, hash)
+        debug('detected', url, hash)
 
-          if (!existsSync(filepath)) {
-            tasks.push((async() => {
-              debug('downloading', url)
-              await downloadTo(url, filepath)
-              debug('downloaded', url)
-            })())
-          }
+        if (!existsSync(filepath)) {
+          tasks.push((async() => {
+            debug('downloading', url)
+            await downloadTo(url, filepath)
+            debug('downloaded', url)
+          })())
+        }
 
-          return posix.relative(dirname(id), `${dir}/${hash}`)
-        },
-      )
+        const newUrl = posix.relative(dirname(id), `${dir}/${hash}`)
+
+        s.overwrite(start, end, newUrl)
+      }
     }
 
-    if (!matched)
-      return
+    if (!hasReplaced)
+      return null
 
     if (tasks.length)
       await Promise.all(tasks)
 
-    return code
+    return {
+      code: s.toString(),
+      map: s.generateMap({ hires: true }),
+    }
   }
 
   return {
@@ -129,7 +140,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     transformIndexHtml: {
       enforce: 'pre',
       async transform(code, ctx) {
-        return await transform(code, ctx.filename)
+        return (await transform(code, ctx.filename))?.code
       },
     },
   } as Plugin

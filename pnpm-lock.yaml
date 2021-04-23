@@ -19,6 +19,7 @@ importers:
       esno: ^0.5.0
       fs-extra: ^9.1.0
       jest: ^26.6.3
+      magic-string: ^0.25.7
       ts-jest: ^26.5.5
       tsup: ^4.9.1
       typescript: ^4.2.4
@@ -26,6 +27,7 @@ importers:
     dependencies:
       debug: 4.3.2
       fs-extra: 9.1.0
+      magic-string: 0.25.7
     devDependencies:
       '@antfu/eslint-config': 0.6.4_eslint@7.24.0+typescript@4.2.4
       '@antfu/ni': 0.5.8
@@ -4003,7 +4005,6 @@ packages:
     resolution: {integrity: sha512-4CrMT5DOHTDk4HYDlzmwu4FVCcIYI8gauveasrdCu2IKIFOJ3f0v/8MDGJCDL9oD2ppz/Av1b0Nj345H9M+XIA==}
     dependencies:
       sourcemap-codec: 1.4.8
-    dev: true
 
   /make-dir/3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
@@ -5133,7 +5134,6 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
-    dev: true
 
   /spdx-correct/3.1.1:
     resolution: {integrity: sha512-cOYcUWwhCuHCXi49RhFRCyJEK3iPj1Ziz9DpViV3tbZOwXD49QzIN3MpOLJNxh2qwq2lJJZaKMVw9qNi4jTC0w==}
