@@ -1,7 +1,7 @@
-import { extname, resolve, join } from 'path'
+import { extname, posix, dirname } from 'path'
 import http from 'http'
 import https from 'https'
-import { existsSync, createWriteStream, ensureDir } from 'fs-extra'
+import { existsSync, createWriteStream, ensureDir, emptyDir } from 'fs-extra'
 import type { Plugin } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
@@ -23,7 +23,7 @@ export interface RemoteAssetsOptions {
   /**
    * Directory name to store the assets from remote
    *
-   * @default '.remote-assets'
+   * @default 'node_modules/.remote-assets'
    */
   assetsDir?: string
 
@@ -54,7 +54,7 @@ const debug = _debug('vite-plugin-remote-assets')
 
 export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugin {
   const {
-    assetsDir = '.remote-assets',
+    assetsDir = 'node_modules/.remote-assets',
     rules = DefaultRules,
   } = options
 
@@ -74,51 +74,63 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     })
   }
 
+  async function transform(code: string, id: string) {
+    let matched = false
+    const tasks: Promise<void>[] = []
+
+    for (const rule of rules) {
+      code = code.replace(
+        rule.match,
+        (full, url) => {
+          url = url || full
+          if (!url || !isValidHttpUrl(url))
+            return full
+
+          matched = true
+          const hash = md5(url) + (rule.ext || extname(url))
+          const filepath = posix.join(dir, hash)
+
+          debug('detected', url, hash)
+
+          if (!existsSync(filepath)) {
+            tasks.push((async() => {
+              debug('downloading', url)
+              await downloadTo(url, filepath)
+              debug('downloaded', url)
+            })())
+          }
+
+          return posix.relative(dirname(id), `${dir}/${hash}`)
+        },
+      )
+    }
+
+    if (!matched)
+      return
+
+    if (tasks.length)
+      await Promise.all(tasks)
+
+    return code
+  }
+
   return {
     name: 'vite-plugin-remote-assets',
     enforce: 'pre',
     async configResolved(config) {
-      dir = resolve(config.publicDir, assetsDir)
+      dir = posix.resolve(config.root, assetsDir)
+      if (config.server.force)
+        await emptyDir(dir)
       await ensureDir(dir)
     },
-    async transform(code) {
-      let matched = false
-      const tasks: Promise<void>[] = []
-
-      for (const rule of rules) {
-        code = code.replace(
-          rule.match,
-          (full, url) => {
-            url = url || full
-            if (!url || !isValidHttpUrl(url))
-              return full
-
-            matched = true
-            const hash = md5(url) + (rule.ext || extname(url))
-            const filepath = join(dir, hash)
-
-            debug('detected', url, hash)
-
-            if (!existsSync(filepath)) {
-              tasks.push((async() => {
-                debug('downloading', url)
-                await downloadTo(url, filepath)
-                debug('downloaded', url)
-              })())
-            }
-
-            return `/${assetsDir}/${hash}`
-          },
-        )
-      }
-
-      if (!matched)
-        return
-
-      if (tasks.length)
-        await Promise.all(tasks)
-
-      return code
+    async transform(code, id) {
+      return await transform(code, id)
+    },
+    transformIndexHtml: {
+      enforce: 'pre',
+      async transform(code, ctx) {
+        return await transform(code, ctx.filename)
+      },
     },
   } as Plugin
 }
