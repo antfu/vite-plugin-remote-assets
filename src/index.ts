@@ -2,7 +2,7 @@ import { extname, posix, dirname } from 'path'
 import http from 'http'
 import https from 'https'
 import { existsSync, createWriteStream, ensureDir, emptyDir } from 'fs-extra'
-import type { Plugin } from 'vite'
+import type { Plugin, ResolvedConfig } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
 import MagicString from 'magic-string'
@@ -60,6 +60,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
   } = options
 
   let dir: string = undefined!
+  let config: ResolvedConfig
 
   async function downloadTo(url: string, filepath: string): Promise<void> {
     const file = createWriteStream(filepath)
@@ -121,14 +122,15 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
 
     return {
       code: s.toString(),
-      map: s.generateMap({ hires: true }),
+      map: config.build.sourcemap ? s.generateMap({ hires: true }) : null,
     }
   }
 
   return {
     name: 'vite-plugin-remote-assets',
     enforce: 'pre',
-    async configResolved(config) {
+    async configResolved(_config) {
+      config = _config
       dir = posix.resolve(config.root, assetsDir)
       if (config.server.force)
         await emptyDir(dir)
