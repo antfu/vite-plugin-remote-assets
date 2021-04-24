@@ -108,7 +108,9 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
           })())
         }
 
-        const newUrl = posix.relative(dirname(id), `${dir}/${hash}`)
+        let newUrl = posix.relative(dirname(id), `${dir}/${hash}`)
+        if (newUrl[0] !== '.')
+          newUrl = `./${newUrl}`
 
         s.overwrite(start, end, newUrl)
       }
