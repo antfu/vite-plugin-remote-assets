@@ -1,6 +1,5 @@
 import { extname, posix, dirname } from 'path'
-import http from 'http'
-import https from 'https'
+import { http, https } from 'follow-redirects'
 import { existsSync, createWriteStream, ensureDir, emptyDir } from 'fs-extra'
 import type { Plugin, ResolvedConfig } from 'vite'
 import _debug from 'debug'
