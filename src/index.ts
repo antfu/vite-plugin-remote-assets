@@ -32,6 +32,13 @@ export interface RemoteAssetsOptions {
    * Rules to match urls to replace
    */
   rules?: RemoteAssetsRule[]
+
+  /**
+   * Mode to resolve urls
+   *
+   * @default relative
+   */
+  resolveMode?: 'relative' | '@fs' | ((moduleId: string, url: string) => 'relative' | '@fs')
 }
 
 export const DefaultRules: RemoteAssetsRule[] = [
@@ -57,6 +64,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
   const {
     assetsDir = 'node_modules/.remote-assets',
     rules = DefaultRules,
+    resolveMode = 'relative',
   } = options
 
   let dir: string = undefined!
@@ -108,9 +116,18 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
           })())
         }
 
-        let newUrl = posix.relative(dirname(id), `${dir}/${hash}`)
-        if (newUrl[0] !== '.')
-          newUrl = `./${newUrl}`
+        const mode = typeof resolveMode === 'function' ? resolveMode(id, url) : resolveMode
+
+        let newUrl: string
+
+        if (mode === 'relative') {
+          newUrl = posix.relative(dirname(id), `${dir}/${hash}`)
+          if (newUrl[0] !== '.')
+            newUrl = `./${newUrl}`
+        }
+        else {
+          newUrl = `/@fs${dir}/${hash}`
+        }
 
         s.overwrite(start, end, newUrl)
       }
