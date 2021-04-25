@@ -72,7 +72,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
   async function downloadTo(url: string, filepath: string): Promise<void> {
     const file = createWriteStream(filepath)
     const client = url.startsWith('https') ? https : http
-    const request = client.get(url, res => res.pipe(file))
+    const request = client.request(url, res => res.pipe(file))
 
     return new Promise((resolve, reject) => {
       request.on('finish', resolve)
