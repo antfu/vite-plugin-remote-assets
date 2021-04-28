@@ -1,7 +1,7 @@
 import { extname, posix, dirname } from 'path'
-import { http, https } from 'follow-redirects'
-import { existsSync, createWriteStream, ensureDir, emptyDir } from 'fs-extra'
-import type { Plugin, ResolvedConfig } from 'vite'
+import axios from 'axios'
+import { existsSync, createWriteStream, ensureDir, emptyDir, unlink } from 'fs-extra'
+import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
 import MagicString from 'magic-string'
@@ -38,6 +38,13 @@ export interface RemoteAssetsOptions {
    * @default relative
    */
   resolveMode?: 'relative' | '@fs' | ((moduleId: string, url: string) => 'relative' | '@fs')
+
+  /**
+   * Wait for download before serving the content
+   *
+   * @default true
+   */
+  awaitDownload?: boolean
 }
 
 export const DefaultRules: RemoteAssetsRule[] = [
@@ -64,24 +71,31 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     assetsDir = 'node_modules/.remote-assets',
     rules = DefaultRules,
     resolveMode = 'relative',
+    awaitDownload = true,
   } = options
 
   let dir: string = undefined!
   let config: ResolvedConfig
+  let server: ViteDevServer | undefined
 
   async function downloadTo(url: string, filepath: string): Promise<void> {
-    const file = createWriteStream(filepath)
-    const client = url.startsWith('https') ? https : http
-    const request = client.request(url, res => res.pipe(file))
+    const writer = createWriteStream(filepath)
+
+    const response = await axios({
+      url,
+      method: 'GET',
+      responseType: 'stream',
+    })
+
+    response.data.pipe(writer)
 
     return new Promise((resolve, reject) => {
-      request.on('finish', resolve)
-      request.on('error', (e) => {
-        file.destroy()
-        reject(e)
-      })
+      writer.on('finish', resolve)
+      writer.on('error', reject)
     })
   }
+
+  const tasksMap: Record<string, Promise<void> | undefined> = {}
 
   async function transform(code: string, id: string) {
     const tasks: Promise<void>[] = []
@@ -101,19 +115,36 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
         if (!url || !isValidHttpUrl(url))
           continue
 
-        hasReplaced = true
         const hash = md5(url) + (rule.ext || extname(url))
         const filepath = posix.join(dir, hash)
 
         debug('detected', url, hash)
 
-        if (!existsSync(filepath)) {
-          tasks.push((async() => {
-            debug('downloading', url)
-            await downloadTo(url, filepath)
-            debug('downloaded', url)
-          })())
+        if (!existsSync(filepath) || tasksMap[filepath]) {
+          if (!tasksMap[filepath]) {
+            tasksMap[filepath] = (async() => {
+              try {
+                debug('downloading', url)
+                await downloadTo(url, filepath)
+                debug('downloaded', url)
+              }
+              catch (e) {
+                if (existsSync(filepath))
+                  await unlink(filepath)
+                throw e
+              }
+              finally {
+                delete tasksMap[filepath]
+              }
+            })()
+          }
+          tasks.push(tasksMap[filepath]!)
+
+          if (!awaitDownload)
+            continue
         }
+
+        hasReplaced = true
 
         const mode = typeof resolveMode === 'function' ? resolveMode(id, url) : resolveMode
 
@@ -132,11 +163,23 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
       }
     }
 
+    if (tasks.length) {
+      if (awaitDownload) {
+        await Promise.all(tasks)
+      }
+      else {
+        Promise.all(tasks).then(() => {
+          if (server) {
+            const module = server.moduleGraph.getModuleById(id)
+            if (module)
+              server.moduleGraph.invalidateModule(module)
+          }
+        })
+      }
+    }
+
     if (!hasReplaced)
       return null
-
-    if (tasks.length)
-      await Promise.all(tasks)
 
     return {
       code: s.toString(),
@@ -153,6 +196,9 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
       if (config.server.force)
         await emptyDir(dir)
       await ensureDir(dir)
+    },
+    configureServer(_server) {
+      server = _server
     },
     async transform(code, id) {
       return await transform(code, id)

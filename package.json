@@ -37,8 +37,8 @@
     "vite": "^2.0.0"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "debug": "^4.3.2",
-    "follow-redirects": "^1.13.3",
     "fs-extra": "^9.1.0",
     "magic-string": "^0.25.7"
   },

@@ -5,6 +5,8 @@ import remoteAssets from 'vite-plugin-remote-assets'
 export default defineConfig({
   plugins: [
     vue(),
-    remoteAssets(),
+    remoteAssets({
+      awaitDownload: false,
+    }),
   ],
 })
