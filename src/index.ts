@@ -157,7 +157,10 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
             newUrl = `./${newUrl}`
         }
         else {
-          newUrl = `/@fs${dir}/${hash}`
+          let path = `${dir}/${hash}`
+          if (!path.startsWith('/'))
+            path = `/${path}`
+          newUrl = `/@fs${path}`
         }
 
         s.overwrite(start, end, newUrl)
