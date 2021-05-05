@@ -1,10 +1,11 @@
-import { extname, posix, dirname } from 'path'
+import { extname, relative, dirname, resolve } from 'path'
 import axios from 'axios'
 import { existsSync, createWriteStream, ensureDir, emptyDir, unlink } from 'fs-extra'
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
 import MagicString from 'magic-string'
+import { slash } from '@antfu/utils'
 
 export interface RemoteAssetsRule {
   /**
@@ -116,7 +117,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
           continue
 
         const hash = md5(url) + (rule.ext || extname(url))
-        const filepath = posix.join(dir, hash)
+        const filepath = slash(resolve(dir, hash))
 
         debug('detected', url, hash)
 
@@ -151,7 +152,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
         let newUrl: string
 
         if (mode === 'relative') {
-          newUrl = posix.relative(dirname(id), `${dir}/${hash}`)
+          newUrl = slash(relative(dirname(id), `${dir}/${hash}`))
           if (newUrl[0] !== '.')
             newUrl = `./${newUrl}`
         }
@@ -192,7 +193,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     enforce: 'pre',
     async configResolved(_config) {
       config = _config
-      dir = posix.resolve(config.root, assetsDir)
+      dir = slash(resolve(config.root, assetsDir))
       if (config.server.force)
         await emptyDir(dir)
       await ensureDir(dir)

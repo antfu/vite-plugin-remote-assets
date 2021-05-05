@@ -6,6 +6,7 @@ importers:
     specifiers:
       '@antfu/eslint-config': ^0.6.4
       '@antfu/ni': ^0.5.8
+      '@antfu/utils': ^0.1.4
       '@types/blueimp-md5': ^2.18.0
       '@types/debug': ^4.1.5
       '@types/follow-redirects': ^1.13.0
@@ -34,6 +35,7 @@ importers:
     devDependencies:
       '@antfu/eslint-config': 0.6.4_eslint@7.24.0+typescript@4.2.4
       '@antfu/ni': 0.5.8
+      '@antfu/utils': 0.1.4
       '@types/blueimp-md5': 2.18.0
       '@types/debug': 4.1.5
       '@types/follow-redirects': 1.13.0
@@ -146,6 +148,10 @@ packages:
   /@antfu/ni/0.5.8:
     resolution: {integrity: sha512-x4y93JuiJZTdbV+xfVbZ10XUx58t1pjbeqLo/0+25BttXgWqx1QA+5T4NStJhffSzcGWf8uGTjRWOUSIlNrhtA==}
     hasBin: true
+    dev: true
+
+  /@antfu/utils/0.1.4:
+    resolution: {integrity: sha512-y2hGnzi4rQuS5WamCpfeqRLQ4uWpoibpXVETpDyw3VhaKpgACWIGGgS9CxuHe6IiAbNrT7izyGXXXCm78/WHyg==}
     dev: true
 
   /@babel/code-frame/7.12.11:
