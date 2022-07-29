@@ -1,6 +1,6 @@
-import { extname, relative, dirname, resolve } from 'path'
+import { dirname, extname, relative, resolve } from 'path'
 import axios from 'axios'
-import { existsSync, createWriteStream, ensureDir, emptyDir, unlink } from 'fs-extra'
+import { createWriteStream, emptyDir, ensureDir, existsSync, unlink } from 'fs-extra'
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
 import _debug from 'debug'
 import md5 from 'blueimp-md5'
@@ -123,7 +123,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
 
         if (!existsSync(filepath) || tasksMap[filepath]) {
           if (!tasksMap[filepath]) {
-            tasksMap[filepath] = (async() => {
+            tasksMap[filepath] = (async () => {
               try {
                 debug('downloading', url)
                 await downloadTo(url, filepath)

@@ -1,5 +1,5 @@
 <template>
-  <img alt="Vite logo" src="https://vitejs.dev/logo.svg" />
+  <img alt="Vite logo" src="https://vitejs.dev/logo.svg">
 </template>
 
 <style>

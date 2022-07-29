@@ -7,12 +7,12 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.0.5"
+    "vue": "^3.2.37"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^1.2.1",
-    "@vue/compiler-sfc": "^3.0.5",
-    "vite": "^2.1.5",
+    "@vitejs/plugin-vue": "^3.0.1",
+    "@vue/compiler-sfc": "^3.2.37",
+    "vite": "^3.0.4",
     "vite-plugin-remote-assets": "workspace:*"
   }
 }
