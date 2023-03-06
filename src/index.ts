@@ -1,4 +1,4 @@
-import { dirname, extname, relative, resolve } from 'path'
+import { dirname, extname, relative, resolve } from 'node:path'
 import axios from 'axios'
 import { createWriteStream, emptyDir, ensureDir, existsSync, unlink } from 'fs-extra'
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
