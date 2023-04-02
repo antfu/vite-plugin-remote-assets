@@ -46,6 +46,13 @@ export interface RemoteAssetsOptions {
    * @default true
    */
   awaitDownload?: boolean
+
+  /**
+   * If download returns 429, use the retry-after header to wait and retry
+   *
+   * @default false
+   */
+  retryTooManyRequests?: boolean
 }
 
 export const DefaultRules: RemoteAssetsRule[] = [
@@ -65,6 +72,10 @@ function isValidHttpUrl(str: string) {
   return url.protocol === 'http:' || url.protocol === 'https:'
 }
 
+function sleep(seconds: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, seconds * 1000))
+}
+
 const debug = _debug('vite-plugin-remote-assets')
 
 export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugin {
@@ -73,20 +84,41 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     rules = DefaultRules,
     resolveMode = 'relative',
     awaitDownload = true,
+    retryTooManyRequests = false,
   } = options
 
   let dir: string = undefined!
   let config: ResolvedConfig
   let server: ViteDevServer | undefined
 
-  async function downloadTo(url: string, filepath: string): Promise<void> {
+  async function downloadTo(url: string, filepath: string, { retryTooManyRequests }: { retryTooManyRequests: boolean }): Promise<void> {
     const writer = createWriteStream(filepath)
 
     const response = await axios({
       url,
       method: 'GET',
+      validateStatus: (status) => {
+        if (status >= 200 && status < 300)
+          return true
+        else if (retryTooManyRequests && status === 429)
+          return true
+        else
+          return false
+      },
       responseType: 'stream',
     })
+
+    if (response.status === 429) {
+      const retryAfter = response.headers['retry-after']
+      if (!retryAfter) {
+        throw new Error(`${url}: 429 without retry-after header`)
+      }
+      else {
+        debug(`${url}: 429, retry after ${retryAfter} seconds`)
+        await sleep(retryAfter)
+        return await downloadTo(url, filepath, { retryTooManyRequests })
+      }
+    }
 
     response.data.pipe(writer)
 
@@ -126,7 +158,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
             tasksMap[filepath] = (async () => {
               try {
                 debug('downloading', url)
-                await downloadTo(url, filepath)
+                await downloadTo(url, filepath, { retryTooManyRequests })
                 debug('downloaded', url)
               }
               catch (e) {
