@@ -4,6 +4,5 @@ import RemoteAssets from 'vite-plugin-remote-assets'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [RemoteAssets.VitePluginRemoteAssets(
-  ), react()],
+  plugins: [react(), RemoteAssets.VitePluginRemoteAssets({ assetsDir: 'dist/assets' })],
 })
