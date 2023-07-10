@@ -184,7 +184,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
         let newUrl: string
 
         if (mode === 'relative') {
-          newUrl = slash(relative(dirname(id), `${dir}/${hash}`))
+          newUrl = slash(relative(config.build.outDir, `${dir}/${hash}`))
           if (newUrl[0] !== '.')
             newUrl = `./${newUrl}`
         }
@@ -194,7 +194,6 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
             path = `/${path}`
           newUrl = `/@fs${path}`
         }
-
         s.overwrite(start, end, newUrl)
       }
     }
@@ -228,7 +227,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     enforce: 'pre',
     async configResolved(_config) {
       config = _config
-      dir = slash(resolve(config.root, assetsDir))
+      dir = slash(relative(config.build.outDir, assetsDir))
       if (config.server.force)
         await emptyDir(dir)
       await ensureDir(dir)
