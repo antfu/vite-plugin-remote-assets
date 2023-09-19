@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     vue(),
     remoteAssets({
+      awaitDownload: false,
       assetsDir: 'dist/assets',
     }),
   ],
