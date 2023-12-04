@@ -229,7 +229,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
     async configResolved(_config) {
       config = _config
       dir = slash(resolve(config.root, assetsDir))
-      if (config.server.force)
+      if (('force' in config.server && config.server.force) || config.optimizeDeps.force)
         await emptyDir(dir)
       await ensureDir(dir)
     },
