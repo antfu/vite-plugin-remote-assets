@@ -1,5 +1,6 @@
 {
   "name": "vite-plugin-remote-assets",
+  "type": "module",
   "version": "0.3.2",
   "packageManager": "pnpm@8.11.0",
   "description": "Bundles your assets from remote urls with your app",
@@ -18,8 +19,14 @@
     "vite-plugin"
   ],
   "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
