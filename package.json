@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-remote-assets",
   "type": "module",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "packageManager": "pnpm@8.11.0",
   "description": "Bundles your assets from remote urls with your app",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
