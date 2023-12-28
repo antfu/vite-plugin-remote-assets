@@ -2,7 +2,6 @@
 
 [![NPM version](https://img.shields.io/npm/v/vite-plugin-remote-assets?color=a1b858&label=)](https://www.npmjs.com/package/vite-plugin-remote-assets)
 
-
 Bundles your assets from remote URLs with your app
 
 ```html
@@ -14,7 +13,6 @@ To
 ```html
 <img src="/node_modules/.remote-assets/f83j2f.jpg" />
 ```
-
 
 ## Install
 

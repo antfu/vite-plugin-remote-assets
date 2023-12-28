@@ -1,8 +1,8 @@
 import { dirname, extname, relative, resolve } from 'node:path'
 import axios from 'axios'
-import { createWriteStream, emptyDir, ensureDir, existsSync, unlink } from 'fs-extra'
+import fs from 'fs-extra'
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
-import _debug from 'debug'
+import Debug from 'debug'
 import md5 from 'blueimp-md5'
 import MagicString from 'magic-string'
 import { slash } from '@antfu/utils'
@@ -76,7 +76,7 @@ function sleep(seconds: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, seconds * 1000))
 }
 
-const debug = _debug('vite-plugin-remote-assets')
+const debug = Debug('vite-plugin-remote-assets')
 
 export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugin {
   const {
@@ -92,7 +92,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
   let server: ViteDevServer | undefined
 
   async function downloadTo(url: string, filepath: string, { retryTooManyRequests }: { retryTooManyRequests: boolean }): Promise<void> {
-    const writer = createWriteStream(filepath)
+    const writer = fs.createWriteStream(filepath)
 
     const response = await axios({
       url,
@@ -153,7 +153,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
 
         debug('detected', url, hash)
 
-        if (!existsSync(filepath) || tasksMap[filepath]) {
+        if (!fs.existsSync(filepath) || tasksMap[filepath]) {
           if (!tasksMap[filepath]) {
             tasksMap[filepath] = (async () => {
               try {
@@ -162,8 +162,8 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
                 debug('downloaded', url)
               }
               catch (e) {
-                if (existsSync(filepath))
-                  await unlink(filepath)
+                if (fs.existsSync(filepath))
+                  await fs.unlink(filepath)
                 throw e
               }
               finally {
@@ -230,8 +230,8 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
       config = _config
       dir = slash(resolve(config.root, assetsDir))
       if (('force' in config.server && config.server.force) || config.optimizeDeps.force)
-        await emptyDir(dir)
-      await ensureDir(dir)
+        await fs.emptyDir(dir)
+      await fs.ensureDir(dir)
     },
     configureServer(_server) {
       server = _server
