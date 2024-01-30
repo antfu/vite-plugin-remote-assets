@@ -41,6 +41,13 @@ export interface RemoteAssetsOptions {
   resolveMode?: 'relative' | '@fs' | ((moduleId: string, url: string) => 'relative' | '@fs')
 
   /**
+   * Set directory for new urls
+   * 
+   * @default undefined
+   */
+  newUrlDir?: string
+
+  /**
    * Wait for download before serving the content
    *
    * @default true
@@ -81,6 +88,7 @@ const debug = Debug('vite-plugin-remote-assets')
 export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugin {
   const {
     assetsDir = 'node_modules/.remote-assets',
+    newUrlDir = undefined,
     rules = DefaultRules,
     resolveMode = 'relative',
     awaitDownload = true,
@@ -183,7 +191,10 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
 
         let newUrl: string
 
-        if (mode === 'relative') {
+        if (newUrlDir) {
+          newUrl = `${newUrlDir}/${hash}`
+        } 
+        else if (mode === 'relative') {
           newUrl = slash(relative(dirname(id), `${dir}/${hash}`))
           if (newUrl[0] !== '.')
             newUrl = `./${newUrl}`
