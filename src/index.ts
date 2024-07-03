@@ -57,7 +57,7 @@ export interface RemoteAssetsOptions {
 
 export const DefaultRules: RemoteAssetsRule[] = [
   {
-    match: /\b(https?:\/\/[\w_#&?.\/-]*?\.(?:png|jpe?g|svg|ico))(?=[`'")\]])/ig,
+    match: /\b(https?:\/\/[\w#&?./-]*?\.(?:png|jpe?g|svg|ico))(?=[`'")\]])/gi,
   },
 ]
 
@@ -240,8 +240,8 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
       return await transform(code, id)
     },
     transformIndexHtml: {
-      enforce: 'pre',
-      async transform(code, ctx) {
+      order: 'pre',
+      async handler(code, ctx) {
         return (await transform(code, ctx.filename))?.code
       },
     },
