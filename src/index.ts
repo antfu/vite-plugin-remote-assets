@@ -1,11 +1,13 @@
-import { dirname, extname, relative, resolve } from 'node:path'
-import axios from 'axios'
-import fs from 'fs-extra'
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
-import Debug from 'debug'
-import md5 from 'blueimp-md5'
-import MagicString from 'magic-string'
+
+import { dirname, extname, relative, resolve } from 'node:path'
 import { slash } from '@antfu/utils'
+import axios from 'axios'
+import md5 from 'blueimp-md5'
+import Debug from 'debug'
+import fs from 'fs-extra'
+import MagicString from 'magic-string'
+import { DevEnvironment } from 'vite'
 
 export interface RemoteAssetsRule {
   /**
@@ -66,9 +68,10 @@ function isValidHttpUrl(str: string) {
   try {
     url = new URL(str)
   }
-  catch (_) {
+  catch {
     return false
   }
+
   return url.protocol === 'http:' || url.protocol === 'https:'
 }
 
@@ -89,7 +92,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
 
   let dir: string = undefined!
   let config: ResolvedConfig
-  let server: ViteDevServer | undefined
+  const envs: Array<DevEnvironment | ViteDevServer> = []
 
   async function downloadTo(url: string, filepath: string, { retryTooManyRequests }: { retryTooManyRequests: boolean }): Promise<void> {
     const writer = fs.createWriteStream(filepath)
@@ -205,11 +208,20 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
       }
       else {
         Promise.all(tasks).then(() => {
-          if (server) {
-            const module = server.moduleGraph.getModuleById(id)
+          envs.forEach((env) => {
+            if (env instanceof DevEnvironment) {
+              const module = env.moduleGraph.getModuleById(id)
+              if (module)
+                env.moduleGraph.invalidateModule(module)
+
+              return
+            }
+
+            // TODO: Temporary workaround for Vite 5, both register for environments and servers
+            const module = env.moduleGraph.getModuleById(id)
             if (module)
-              server.moduleGraph.invalidateModule(module)
-          }
+              env.moduleGraph.invalidateModule(module)
+          })
         })
       }
     }
@@ -233,8 +245,14 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
         await fs.emptyDir(dir)
       await fs.ensureDir(dir)
     },
-    configureServer(_server) {
-      server = _server
+    configureServer(server) {
+      // TODO: Temporary workaround for Vite 5, both register for environments and servers
+      if ('environments' in server && typeof server.environments === 'object' && server.environments != null) {
+        Object.values(server.environments).forEach(env => envs.push(env))
+      }
+      else {
+        envs.push(server)
+      }
     },
     async transform(code, id) {
       return await transform(code, id)
