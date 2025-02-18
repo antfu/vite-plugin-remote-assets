@@ -2,10 +2,11 @@ import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
 
 import fs from 'node:fs'
 import { dirname, extname, relative, resolve } from 'node:path'
+import { pipeline } from 'node:stream'
 import { slash } from '@antfu/utils'
-import axios from 'axios'
 import Debug from 'debug'
 import MagicString from 'magic-string'
+import { fetch } from 'node-fetch-native'
 import { hash as getHash } from 'ohash'
 import { DevEnvironment } from 'vite'
 
@@ -97,22 +98,10 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
   async function downloadTo(url: string, filepath: string, { retryTooManyRequests }: { retryTooManyRequests: boolean }): Promise<void> {
     const writer = fs.createWriteStream(filepath)
 
-    const response = await axios({
-      url,
-      method: 'GET',
-      validateStatus: (status) => {
-        if (status >= 200 && status < 300)
-          return true
-        else if (retryTooManyRequests && status === 429)
-          return true
-        else
-          return false
-      },
-      responseType: 'stream',
-    })
+    const response = await fetch(url)
 
     if (response.status === 429) {
-      const retryAfter = response.headers['retry-after']
+      const retryAfter = +(response.headers.get('retry-after') || 0)
       if (!retryAfter) {
         throw new Error(`${url}: 429 without retry-after header`)
       }
@@ -123,11 +112,13 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
       }
     }
 
-    response.data.pipe(writer)
-
     return new Promise((resolve, reject) => {
-      writer.on('finish', resolve)
-      writer.on('error', reject)
+      pipeline(response.body as any, writer, (err) => {
+        if (err)
+          reject(err)
+        else
+          resolve()
+      })
     })
   }
 

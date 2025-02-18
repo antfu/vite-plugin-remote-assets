@@ -43,10 +43,9 @@
     "vite": ">=5.0.0"
   },
   "dependencies": {
-    "axios": "^1.7.9",
     "debug": "^4.4.0",
     "magic-string": "^0.30.17",
-    "ofetch": "^1.4.1",
+    "node-fetch-native": "^1.6.6",
     "ohash": "^1.1.4"
   },
   "devDependencies": {
