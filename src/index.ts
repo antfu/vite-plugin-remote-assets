@@ -1,12 +1,12 @@
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
 
+import fs from 'node:fs'
 import { dirname, extname, relative, resolve } from 'node:path'
 import { slash } from '@antfu/utils'
 import axios from 'axios'
-import md5 from 'blueimp-md5'
 import Debug from 'debug'
-import fs from 'fs-extra'
 import MagicString from 'magic-string'
+import { hash as getHash } from 'ohash'
 import { DevEnvironment } from 'vite'
 
 export interface RemoteAssetsRule {
@@ -151,7 +151,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
         if (!url || !isValidHttpUrl(url))
           continue
 
-        const hash = md5(url) + (rule.ext || extname(url))
+        const hash = getHash(url) + (rule.ext || extname(url))
         const filepath = slash(resolve(dir, hash))
 
         debug('detected', url, hash)
@@ -166,7 +166,7 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
               }
               catch (e) {
                 if (fs.existsSync(filepath))
-                  await fs.unlink(filepath)
+                  await fs.promises.unlink(filepath)
                 throw e
               }
               finally {
@@ -242,8 +242,8 @@ export function VitePluginRemoteAssets(options: RemoteAssetsOptions = {}): Plugi
       config = _config
       dir = slash(resolve(config.root, assetsDir))
       if (('force' in config.server && config.server.force) || config.optimizeDeps.force)
-        await fs.emptyDir(dir)
-      await fs.ensureDir(dir)
+        await fs.promises.rm(dir, { recursive: true, force: true })
+      await fs.promises.mkdir(dir, { recursive: true })
     },
     configureServer(server) {
       // TODO: Temporary workaround for Vite 5, both register for environments and servers
