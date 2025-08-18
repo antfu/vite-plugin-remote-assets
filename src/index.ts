@@ -60,7 +60,7 @@ export interface RemoteAssetsOptions {
 
 export const DefaultRules: RemoteAssetsRule[] = [
   {
-    match: /\b(https?:\/\/[\w#&?./-]*?\.(?:png|jpe?g|svg|ico))(?=[`'")\]])/gi,
+    match: /\b(https?:\/\/[\w#&?./-]*?\.(?:png|jpe?g|svg|ico|webp))(?=[`'")\]])/gi,
   },
 ]
 
